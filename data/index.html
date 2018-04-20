@@ -1,0 +1,202 @@
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<style>
+body {
+overflow: hidden;
+padding: 0;
+margin: 0;
+background-color: #BBB;
+}
+#info {
+position: absolute;
+top: 0px;
+width: 100%;
+padding: 5px;
+text-align: center;
+}
+#info a {
+color: #66F;
+text-decoration: none;
+}
+#info a:hover {
+text-decoration: underline;
+}
+#container {
+width: 100%;
+height: 100%;
+overflow: hidden;
+padding: 0;
+margin: 0;
+-webkit-user-select: none;
+-moz-user-select: none;
+}
+input[type=range][orient=vertical] {
+writing-mode: bt-lr;
+/* IE */
+-webkit-appearance: slider-vertical;
+/* WebKit */
+width: 8px;
+height: 100px;
+padding: 0 9vw;
+}
+</style>
+</head>
+
+<body onload="javascript:start();">
+<script src="virtualjoystick.js"></script>
+<script>
+console.log("touchscreen is", VirtualJoystick.touchScreenAvailable() ? "available" : "not available");
+var websock;
+
+var STICK_MAXIMUM = 110
+var SUBDIVISIONS = 8
+
+function start() {
+var server_ip = window.location.hostname
+if (server_ip == "") {
+server_ip = "192.168.1.132"
+}
+console.log(server_ip);
+websock = new WebSocket('ws://' + server_ip + ':81/');
+websock.onopen = function (evt) { console.log('websock open'); };
+websock.onclose = function (evt) { console.log('websock close'); };
+websock.onerror = function (evt) { console.log(evt); };
+websock.onmessage = function (evt) { receivedData(evt); };
+}
+function receivedData(evt) {
+console.log(evt.data);
+mess = evt.data;
+parts = mess.split("_")
+
+
+switch (parts[0]) {
+    case "D":
+        disL = parts[1];
+        disC = parts[2];
+        disR = parts[3];
+
+        var spanL = document.getElementById("distance_left");
+        var spanC = document.getElementById("distance_center");
+        var spanR = document.getElementById("distance_right");
+
+        spanL.value = disL;
+        spanC.value = disC;
+        spanR.value = disR;
+        break;
+
+    case "O":
+        odomL = parts[1];
+        odomR = parts[2];
+        var odom = document.getElementById("odometry_l_r");
+        odom.innerHTML = "Odometry left:" + odomL + "   right:" + odomR;
+
+        break;
+    default:
+        break;
+}
+
+    }
+    function updateGroup(e) {
+        var cstr = document.getElementById('left_thrust').value + "_" + document.getElementById('right_thrust').value
+        console.log('CAR: ' + cstr);
+        websock.send(cstr);
+    }
+    var joystick = new VirtualJoystick({
+        container: document.getElementById('container'),
+        mouseSupport: true,
+		limitStickTravel: true,
+		stickRadius	: STICK_MAXIMUM
+    });
+    joystick.addEventListener('touchStart', function () {
+        console.log('down')
+    })
+    joystick.addEventListener('touchEnd', function () {
+        console.log('up')
+    })
+    var old_car_string = ""
+    setInterval(function () {
+        var outputEl = document.getElementById('result');
+        outputEl.innerHTML = '<b>Result:</b> '
+            + ' dx:' + joystick.deltaX()
+            + ' dy:' + joystick.deltaY()
+            + (joystick.right() ? ' right' : '')
+            + (joystick.up() ? ' up' : '')
+            + (joystick.left() ? ' left' : '')
+            + (joystick.down() ? ' down' : '')
+
+        var deltaX	= joystick.deltaX();
+		var deltaY	= joystick.deltaY();
+        var stickDistance = Math.sqrt( (deltaX * deltaX) + (deltaY * deltaY) );
+
+        // console.log(stickDistance)
+        var prop =  stickDistance / STICK_MAXIMUM
+        prop = Math.floor(prop*SUBDIVISIONS)
+        prop *=100/SUBDIVISIONS
+        prop=Math.floor( prop)
+        // console.log(prop)
+        if (prop > 90) prop =99
+        if (prop < 10) prop =0
+
+        var lw = 0;
+        var rw = 0;
+        if (joystick.up()) {
+            lw = prop;
+            rw = prop;
+
+            if (joystick.left()) {
+                lw = 0;
+                rw = prop;
+            }
+            if (joystick.right()) {
+                lw = prop;
+                rw = 0;
+            }
+        }
+        if (joystick.down()) {
+            lw = -prop;
+            rw = -prop;
+
+            if (joystick.left()) {
+                lw = 0;
+                rw = -prop;
+            }
+            if (joystick.right()) {
+                lw = -prop;
+                rw = 0;
+            }
+        }
+        if (!joystick.down() && !joystick.up()) {
+            if (joystick.right()) {
+                lw = prop;
+                rw = -prop;
+            }
+            if (joystick.left()) {
+                lw = -prop;
+                rw = prop;
+            }
+        }
+        var cstr = lw + "_" + rw
+        if (old_car_string != cstr) {
+            old_car_string = cstr;
+            console.log('CAR: ' + cstr);
+            websock.send(cstr);
+        }
+    }, 10);
+</script>
+<div id="container"></div>
+<div id="info">
+    <span id="odometry_l_r"></span>
+    <br>
+    <input type="range" orient="vertical" id="distance_left" value="0" min="0" max="100">
+    <input type="range" orient="vertical" id="distance_center" value="0" min="0" max="100">
+    <input type="range" orient="vertical" id="distance_right" value="0" min="0" max="100">
+    <br/>
+    <br/> Touch the screen and move - works with mouse too as debug
+    <br/>
+    <span id="result"></span>
+</div>
+</body>
+
+</html>
