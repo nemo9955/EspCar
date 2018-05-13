@@ -198,13 +198,16 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
 
 void setup()
 {
+  
+    const char* ssid = "Baloonies";
+    const char* password =  "balon.pass";
+    
     digitalWrite(MOTOR_IN1, LOW);
     digitalWrite(MOTOR_IN2, LOW);
     digitalWrite(MOTOR_IN3, LOW);
     digitalWrite(MOTOR_IN4, LOW);
 
     Serial.begin(9600);
-
     delay(100);
 
     ml.setSpeed(0);
@@ -218,9 +221,8 @@ void setup()
     // SPIFFS.end();
 
     // WiFi.disconnect();
-    WiFi.disconnect(true);
-    delay(100);
-    WiFi.begin();
+    //WiFi.disconnect(true);
+    delay(100); 
     delay(100);
     WiFi.setAutoConnect(true);
     WiFi.setAutoReconnect(true);
@@ -228,13 +230,24 @@ void setup()
     Serial.println(ESP.getSdkVersion());
 
     // WiFi.mode(WIFI_AP_STA);
-    WiFi.mode(WIFI_AP);
-    Serial.println("** Starting AP");
-    WiFi.softAP(AP_SSID, AP_PASS);
+   // WiFi.mode(WIFI_AP);
+    //Serial.println("** Starting AP");
+    //WiFi.softAP(AP_SSID, AP_PASS);
     // WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-    Serial.println("AP IP address: ");
-    Serial.println(WiFi.softAPIP());
+    //Serial.println("AP IP address: ");
+    //Serial.println(WiFi.softAPIP());
+    //Serial.println(WiFi.localIP());
 
+        WiFi.begin(ssid, password);    
+    while (WiFi.status() != WL_CONNECTED) 
+    {
+    delay(500);
+    Serial.println("Connecting to WiFi..");
+    }
+     Serial.println("Connected to the WiFi network");
+     Serial.println("IP address: ");
+     Serial.println(WiFi.localIP());
+    
 
     server.on("/hello", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, "text/plain", "Hello World");
@@ -350,6 +363,7 @@ void loop()
     // {
     //     Serial.println("WiFi not connected!");
     // }
+    
 
     }
 }

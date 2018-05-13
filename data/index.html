@@ -56,7 +56,7 @@ var SUBDIVISIONS = 8
 function start() {
 var server_ip = window.location.hostname
 if (server_ip == "") {
-server_ip = "192.168.1.132"
+server_ip = "192.168.2.105"
 }
 console.log(server_ip);
 websock = new WebSocket('ws://' + server_ip + ':81/');
@@ -98,11 +98,11 @@ switch (parts[0]) {
 }
 
     }
-    function updateGroup(e) {
-        var cstr = document.getElementById('left_thrust').value + "_" + document.getElementById('right_thrust').value
-        console.log('CAR: ' + cstr);
-        websock.send(cstr);
-    }
+    //function updateGroup(e) {
+      //  var cstr = document.getElementById('left_thrust').value + "_" + document.getElementById('right_thrust').value
+        //console.log('CAR: ' + cstr);
+        //websock.send(cstr);
+    //}
     var joystick = new VirtualJoystick({
         container: document.getElementById('container'),
         mouseSupport: true,
@@ -116,6 +116,8 @@ switch (parts[0]) {
         console.log('up')
     })
     var old_car_string = ""
+	
+	
     setInterval(function () {
         var outputEl = document.getElementById('result');
         outputEl.innerHTML = '<b>Result:</b> '
@@ -181,9 +183,18 @@ switch (parts[0]) {
         if (old_car_string != cstr) {
             old_car_string = cstr;
             console.log('CAR: ' + cstr);
-            websock.send(cstr);
+			sendToSoket(cstr);
         }
+		
     }, 10);
+	function sendToSoket(cstr) {
+		setTimeout(function () {
+		websock.send(cstr);
+		}, 1);
+	}
+	
+	
+	
 </script>
 <div id="container"></div>
 <div id="info">
