@@ -56,7 +56,7 @@ var SUBDIVISIONS = 8
 function start() {
 var server_ip = window.location.hostname
 if (server_ip == "") {
-server_ip = "192.168.2.105"
+    server_ip = "192.168.2.105"
 }
 console.log(server_ip);
 websock = new WebSocket('ws://' + server_ip + ':81/');
@@ -116,8 +116,9 @@ switch (parts[0]) {
         console.log('up')
     })
     var old_car_string = ""
-	
-	
+    var send_car_string = ""
+
+
     setInterval(function () {
         var outputEl = document.getElementById('result');
         outputEl.innerHTML = '<b>Result:</b> '
@@ -179,22 +180,20 @@ switch (parts[0]) {
                 rw = prop;
             }
         }
-        var cstr = lw + "_" + rw
-        if (old_car_string != cstr) {
-            old_car_string = cstr;
-            console.log('CAR: ' + cstr);
-			sendToSoket(cstr);
+        send_car_string = lw + "_" + rw
+
+    }, 20);
+
+    setInterval(function () {
+        if (old_car_string != send_car_string) {
+        old_car_string = send_car_string;
+        console.log('CAR: ' + send_car_string);
+        websock.send(send_car_string);
         }
-		
-    }, 10);
-	function sendToSoket(cstr) {
-		setTimeout(function () {
-		websock.send(cstr);
-		}, 1);
-	}
-	
-	
-	
+    }, 20);
+
+
+
 </script>
 <div id="container"></div>
 <div id="info">

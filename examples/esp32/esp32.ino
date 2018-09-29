@@ -4,7 +4,7 @@
 // #define DEBUG_ESP_WIFI
 
 #include "L298N.h"
-#include <WiFiMulti.h>
+// #include <WiFiMulti.h>
 
 #include <SPIFFS.h>
 #include <FS.h>
@@ -18,6 +18,9 @@
 
 #define AP_SSID "esp32car"
 #define AP_PASS "pass12345"
+
+#define ssid = "SOMNE SSID";
+#define password = "ssid.pass";
 
 #define CAR_STEP_MAX 99
 #define MIN_MOTOR_SPEED 150
@@ -38,7 +41,7 @@
 
 // #define ADD_ WIFIM ULTI_AP        wifiMulti.addAP("ssid_from_AP_1", "your_password_for_AP_1"); wifiMulti.addAP("ssid_from_AP_2", "your_password_for_AP_2"); wifiMulti.addAP("ssid_from_AP_3", "your_password_for_AP_3");
 
-WiFiMulti wifiMulti;
+// WiFiMulti wifiMulti;
 IPAddress local_IP(192, 168, 1, 132);
 IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
@@ -53,8 +56,8 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 #define MOTOR_IN3 26
 #define MOTOR_IN4 25
 
-L298N ml(MOTOR_ENA,MOTOR_IN1, MOTOR_IN2);
-L298N mr(MOTOR_ENB,MOTOR_IN3, MOTOR_IN4);
+L298N ml(MOTOR_ENA, MOTOR_IN1, MOTOR_IN2);
+L298N mr(MOTOR_ENB, MOTOR_IN3, MOTOR_IN4);
 
 bool ld;
 bool rd;
@@ -147,8 +150,10 @@ void setWheels(int lw, int rw)
     lv = map(abs(lw), 0, CAR_STEP_MAX, MIN_MOTOR_SPEED, MAX_MOTOR_SPEED);
     rv = map(abs(rw), 0, CAR_STEP_MAX, MIN_MOTOR_SPEED, MAX_MOTOR_SPEED);
 
-    if(lv == MIN_MOTOR_SPEED) lv=0;
-    if(rv == MIN_MOTOR_SPEED) rv=0;
+    if (lv == MIN_MOTOR_SPEED)
+        lv = 0;
+    if (rv == MIN_MOTOR_SPEED)
+        rv = 0;
 
     ml.setSpeed(lv);
     mr.setSpeed(rv);
@@ -198,16 +203,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
 
 void setup()
 {
-  
-    const char* ssid = "Baloonies";
-    const char* password =  "balon.pass";
-    
+
     digitalWrite(MOTOR_IN1, LOW);
     digitalWrite(MOTOR_IN2, LOW);
     digitalWrite(MOTOR_IN3, LOW);
     digitalWrite(MOTOR_IN4, LOW);
 
-    Serial.begin(9600);
+    Serial.begin(115200);
     delay(100);
 
     ml.setSpeed(0);
@@ -222,32 +224,34 @@ void setup()
 
     // WiFi.disconnect();
     //WiFi.disconnect(true);
-    delay(100); 
+    delay(100);
     delay(100);
     WiFi.setAutoConnect(true);
     WiFi.setAutoReconnect(true);
     Serial.print("ESP32 SDK: ");
     Serial.println(ESP.getSdkVersion());
 
-    // WiFi.mode(WIFI_AP_STA);
-   // WiFi.mode(WIFI_AP);
-    //Serial.println("** Starting AP");
-    //WiFi.softAP(AP_SSID, AP_PASS);
-    // WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-    //Serial.println("AP IP address: ");
-    //Serial.println(WiFi.softAPIP());
-    //Serial.println(WiFi.localIP());
+    WiFi.mode(WIFI_AP);
+    Serial.println("** Starting AP");
+    WiFi.softAP(AP_SSID, AP_PASS);
+    WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+    Serial.println("AP IP address: ");
+    Serial.println(WiFi.softAPIP());
 
-        WiFi.begin(ssid, password);    
-    while (WiFi.status() != WL_CONNECTED) 
-    {
-    delay(500);
-    Serial.println("Connecting to WiFi..");
-    }
-     Serial.println("Connected to the WiFi network");
-     Serial.println("IP address: ");
-     Serial.println(WiFi.localIP());
-    
+    ///////////////////////////////////////////////////
+
+    // WiFi.mode(WIFI_AP_STA);
+    //     WiFi.begin(ssid, password);
+    // int i=0;
+    // while (WiFi.status() != WL_CONNECTED && i<30)
+    // {
+    // delay(500);
+    // i++;
+    // Serial.println("Connecting to WiFi..");
+    // }
+    //  Serial.println("Connected to the WiFi network");
+    //  Serial.println("IP address: ");
+    //  Serial.println(WiFi.localIP());
 
     server.on("/hello", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, "text/plain", "Hello World");
@@ -286,8 +290,6 @@ void setup()
     ml.setSpeed(255);
     mr.setSpeed(255);
 
-
-
     // ADD_WIFIMULTI_AP
     // if (!WiFi.config(local_IP, gateway, subnet))
     //     Serial.println("STA Failed to configure");
@@ -299,14 +301,14 @@ void setup()
     //     Serial.println("IP address: ");
     //     Serial.println(WiFi.localIP());
     // }
-
 }
-bool did=true;
+bool did = true;
 void loop()
 {
-    if (did){
+    if (did)
+    {
         Serial.print("STARTED LOOP!!");
-        did=false;
+        did = false;
     }
 
     webSocket.loop();
@@ -359,11 +361,9 @@ void loop()
         rightCount = 0;
         leftCount = 0;
 
-    // if (wifiMulti.run() != WL_CONNECTED)
-    // {
-    //     Serial.println("WiFi not connected!");
-    // }
-    
-
+        // if (wifiMulti.run() != WL_CONNECTED)
+        // {
+        //     Serial.println("WiFi not connected!");
+        // }
     }
 }
